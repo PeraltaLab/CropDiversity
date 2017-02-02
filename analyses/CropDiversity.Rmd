@@ -1,6 +1,6 @@
 ---
 title: "Crop diversity influences disease suppression in soils"
-author: "Ariane L. Peralta, Yanmei Sun, Marshall McDaniel, Jay T. Lennon"
+author: "Ariane L. Peralta, Yanmei Sun, Marshall McDaniel, Jay T. Lennon" - acknowledge Mario for analyses help!
 date: "Last updated on `r format(Sys.time(), '%d %B, %Y')`"
 header-includes:
   - \usepackage{array}
@@ -46,37 +46,24 @@ require("ade4")
 require("grid"); require("png")
 ```
 
-# Subset Data
-```{r}
-#subset do not include S and W
-#Note latest figures and table previously generated are located in figures_current folder
-
-data.subsetNoS <- droplevels(subset(new.data, rotation != "S"))
-str(data.subsetNoS$rotation)
-data.subsetNoSW <- droplevels(subset(data.subsetNoS, rotation != "W"))
-str(data.subsetNoSW$rotation)
-data.subsetNoSW
-str(data.subsetNoSW)
-```
-
 
 # Microbial Data
 ```{r}
 # Import OTU data
 # Import Raw Data
-BDdata.in <- read.otu("../data/Classified_genus_OTUs.shared")
+BDdata.in <- read.otu("../data/BD.shared")
 
 # Remove Mock Community
-BDdata.in2 <- BDdata.in[which(rownames(WLdata.in) != "Mock"), ]
+BDdata.in2 <- BDdata.in[which(rownames(BDdata.in) != "Mock"), ]
 
 # Remove OTUs with less than two occurences across all sites
-BDdata <- BDdata.in2[, which(colSums(WLdata.in2) >= 2)]
+BDdata <- BDdata.in2[, which(colSums(BDdata.in2) >= 2)]
 
 # Make Presence Absence Matrix
 BDdataPA <- (BDdata > 0) * 1
 
 # Make Relative Abundence Matrices
-BDdataREL <- WLdata
+BDdataREL <- BDdata
 for(i in 1:dim(BDdata)[1]){
   BDdataREL[i,] <- BDdata[i,]/sum(BDdata[i,])
 }
@@ -95,16 +82,28 @@ BDveg <- read.csv("../data/BDveg.csv", row.names = 1)
 # plant data as discrete and continuous biomass data: rotation	crop_numb	covercrop_g	weeds_g	crop_g	biomass_total	covercrop_prop	weeds_prop	crop_prop
 ```
 
-
 # Environmental Data
 ```{r}
 # Import Environmental Data
 
 design <- read.csv("../data/BDsoil_exptdesign.csv", row.names = 1)
 treatments <- design$rotation
-levels(rotation) <- c("mC", "C1cov", "CS", "CSW", 
-                        "CSW1cov", "CSW2cov", "Fallow")
+levels(treatments) <- c("fallow", "CSW-2cov", "CSW-1cov", "CSW", 
+                        "CS", "C1cov", "C", "S", "W")
 #DO NOT include analysis of "S" and "W" treatments
+```
+
+# Subset Data - need help subsetting, Mario
+```{r}
+#subset do not include S and W
+#Note latest figures and table previously generated are located in figures_current folder
+
+data.subsetNoS <- droplevels(subset(new.data, rotation != "S"))
+str(data.subsetNoS$rotation)
+data.subsetNoSW <- droplevels(subset(data.subsetNoS, rotation != "W"))
+str(data.subsetNoSW$rotation)
+data.subsetNoSW
+str(data.subsetNoSW)
 ```
 
 # Diversity Metrics - Hypothesis Testing
