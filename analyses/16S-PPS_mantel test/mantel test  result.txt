@@ -1,0 +1,32 @@
+#identifying community data set
+
+> BACT<-read.csv("newdataOTUsP.csv", header=TRUE)
+> phlD<-read.csv("T-RF Matrix cut new.csv", header=TRUE)
+ 
+> df.BACT<- BACT[,-c(1:32)]
+> df.phlD<- phlD[,-c(1:9)]
+
+> #running dissimilarity matrix (bray-curtis)
+
+> BACT.dist<- vegdist(df.BACT)
+> phlD.dist<- vegdist(df.phlD)
+> 
+> #running matrix correlation using mantel
+
+> mantel(BACT.dist, phlD.dist)
+
+Mantel statistic based on Pearson's product-moment correlation 
+
+Call:
+mantel(xdis = BACT.dist, ydis = phlD.dist) 
+
+Mantel statistic r: -0.01021 
+      Significance: 0.532 
+
+Upper quantiles of permutations (null model):
+  90%   95% 97.5%   99% 
+0.140 0.188 0.222 0.259 
+Permutation: free
+Number of permutations: 999
+
+> 

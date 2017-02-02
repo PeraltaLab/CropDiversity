@@ -1,0 +1,395 @@
+---
+title: "Crop diversity influences disease suppression in soils"
+author: "Ariane L. Peralta, Yanmei Sun, Marshall McDaniel, Jay T. Lennon"
+date: "Last updated on `r format(Sys.time(), '%d %B, %Y')`"
+header-includes:
+  - \usepackage{array}
+  - \usepackage{graphics}
+output: 
+  pdf_document:
+  fig_caption: true
+---
+
+Project Description: 
+
+# Initial Setup
+```{r}
+rm(list=ls())
+setwd("~/GitHub/CropDiversity/analyses")
+se <- function(x, ...){sd(x, na.rm = TRUE)/sqrt(length(na.omit(x)))}
+ci <- function(x, ...){1.96 * sd(x,na.rm = TRUE)}
+
+# Code Dependencies
+# source("../bin/DiversityFunctions.R")
+source("../bin/MothurTools.R")
+require("vegan")
+require("reshape")
+#require("BiodiversityR")
+# require("ecodist")
+require("ggplot2")
+require("ade4")
+require("grid"); require("png")
+```
+
+# Subset Data
+```{r}
+#subset do not include S and W
+#Note latest figures and table previously generated are located in figures_current folder
+
+data.subsetNoS <- droplevels(subset(new.data, rotation != "S"))
+str(data.subsetNoS$rotation)
+data.subsetNoSW <- droplevels(subset(data.subsetNoS, rotation != "W"))
+str(data.subsetNoSW$rotation)
+data.subsetNoSW
+str(data.subsetNoSW)
+```
+
+
+# Microbial Data
+```{r}
+# Import OTU data
+# Import Raw Data
+BDdata.in <- read.otu("../data/Classified_genus_OTUs.shared")
+
+# Remove Mock Community
+BDdata.in2 <- BDdata.in[which(rownames(WLdata.in) != "Mock"), ]
+
+# Remove OTUs with less than two occurences across all sites
+BDdata <- BDdata.in2[, which(colSums(WLdata.in2) >= 2)]
+
+# Make Presence Absence Matrix
+BDdataPA <- (BDdata > 0) * 1
+
+# Make Relative Abundence Matrices
+BDdataREL <- WLdata
+for(i in 1:dim(BDdata)[1]){
+  BDdataREL[i,] <- BDdata[i,]/sum(BDdata[i,])
+}
+
+# Log Transform Relative Abundances
+BDdataREL.log <- decostand(BDdataREL, method="log")
+
+# Import Taxonomy File
+BD.tax <- read.tax(taxonomy = "../data/BD.0.03.cons.taxonomy")
+```
+
+# Plant Data
+```{r}
+BDveg <- read.csv("../data/BDveg.csv", row.names = 1)
+
+# plant data as discrete and continuous biomass data: rotation	crop_numb	covercrop_g	weeds_g	crop_g	biomass_total	covercrop_prop	weeds_prop	crop_prop
+```
+
+
+# Environmental Data
+```{r}
+# Import Environmental Data
+
+design <- read.csv("../data/BDsoil_exptdesign.csv", row.names = 1)
+treatments <- design$rotation
+levels(rotation) <- c("mC", "C1cov", "CS", "CSW", 
+                        "CSW1cov", "CSW2cov", "Fallow")
+#DO NOT include analysis of "S" and "W" treatments
+```
+
+# Diversity Metrics - Hypothesis Testing
+```{r}
+
+#16S rRNA total bacterial diversity - update file names
+
+newdata <- read.csv("OTUs.csv", header=TRUE)
+
+richness <- fisher.alpha(newdata[,-c(1:1)])
+richness
+write.table(richness, file="richness.csv", sep=",", col.names=NA)
+
+Treatment <- read.csv("Treatment.csv", header=TRUE)
+trt.bact <- Treatment[,1:6]
+BD.richness <-cbind(trt.bact,richness)
+write.table(BD.richness, file="BD.richness.csv", sep=",", col.names=NA)
+
+Hdiversity <-diversity(newdata[,-c(1:1)])
+BD.diversity <-cbind(trt.bact,Hdiversity)
+write.table(BD.diversity, file="BD.diversity.csv", sep=",", col.names=NA)
+
+richness.lm = lm(richness ~ rotation, data=BD.richness)
+anova(richness.lm)
+
+diversity.lm = lm(Hdiversity ~ rotation, data=BD.diversity)
+anova(diversity.lm)
+
+BD.diversity <-read.csv("BD.diversity.csv", header=TRUE)
+A=read.csv ("BD.diversity.csv", header=TRUE)
+cor(A$crop_numb, A$Hdiversity)
+
+data.diversity<- read.csv("BD.diversity.csv", header=TRUE)
+aov.diversity=aov(H ~Rotation+Block,data=data.diversity)
+summary(aov.diversity)
+
+posthocD <-TukeyHSD(aov.prnd,"Rotation",conf.level=0.95)
+library(agricolae)
+A=HSD.test(aov.prnd,"Rotation")
+A
+
+#PRND gene qPCR - update file names
+
+read.csv("~/Dropbox/Peralta_Lab_Shared/Projects/2012_KBS_LTER_CropDiversity/Raw_data/PRND gene.csv", header=TRUE)
+
+data.prnd<- read.csv("PRND gene1.csv", header=TRUE)
+aov.prnd=aov(copies~Rotation+Block,data=data.prnd)
+summary(aov.prnd)
+posthocD <-TukeyHSD(aov.prnd,"rotation",conf.level=0.95)
+posthocD
+
+library(agricolae)
+HSD.test(aov.prnd,"rotation")
+A=HSD.test(aov.prnd,"rotation")
+A
+
+boxplot(copies~crop, data=data.prnd, xlab="Crop Number", ylab="Log copy number of prnD gene/g soil")
+boxplot(adj_copies~Rotation, data=data.prnd, xlab="Rotation", ylab="Log copy number of prnD gene/g dry soil")
+boxplot(carbon~Rotation, data=data.prnd, xlab="Rotation", ylab="total soil carbon gC kg-1")
+
+reg <- lm(adj_copies~crop+carbon+moisture, data=data.prnd)
+summary(reg)
+
+```
+
+# Simple Hypothesis Testing
+```{r}
+# Check that Bac and Plant data have same structure as design
+row.names(BDdataREL) == row.names(design)
+
+#PERMANOVA on rotation effect - no S and W
+
+adonis = adonis(new.data[,-c(1:32)] ~ rotation, method = "bray", data = new.data, perm=1000)
+adonis
+
+#PERMANOVA on soil factors - no S and W
+#check for correlations among soil factors
+new.data <- read.csv("newdataOTUsP.csv", header=TRUE)
+soil.factors <- new.data[,6:14]
+cor(soil.factors)
+
+#in soil model, include GWC, Total.C, ammonium, nitrate, pH, sand; note: GWC correlated to texture and Total.C, but included anyway
+
+adonis = adonis(new.data[,-c(1:32)] ~ GWC + Total.C + Total.N + NH4 + NO3 + pHH2O + Clay + Silt+ Sand, method = "bray", data = new.data, perm=1000)
+adonis
+# Terms added sequentially (first to last)
+
+adonis = adonis(new.data[,-c(1:32)] ~ Sand + GWC + Total.C + Total.N + NH4 + NO3 + pHH2O + Clay + Silt, method = "bray", data = new.data, perm=1000)
+adonis
+# Terms added sequentially (first to last)
+
+adonis = adonis(new.data[,-c(1:32)] ~ Silt + Sand  + GWC + Total.C + Total.N + NH4 + NO3 + pHH2O + Clay, method = "bray", data = new.data, perm=1000)
+adonis
+# Terms added sequentially (first to last)
+
+adonis = adonis(new.data[,-c(1:32)] ~ Clay + Silt + Sand  + GWC + Total.C + Total.N + NH4 + NO3 + pHH2O, method = "bray", data = new.data, perm=1000)
+adonis
+# Terms added sequentially (first to last)
+
+adonis = adonis(new.data[,-c(1:32)] ~ pHH2O + Clay + Silt + Sand  + GWC + Total.C + Total.N + NH4 + NO3, method = "bray", data = new.data, perm=1000)
+adonis
+# Terms added sequentially (first to last)
+
+adonis = adonis(new.data[,-c(1:32)] ~ NO3 + pHH2O + Clay + Silt + Sand  + GWC + Total.C + Total.N + NH4, method = "bray", data = new.data, perm=1000)
+adonis
+# Terms added sequentially (first to last)
+
+adonis = adonis(new.data[,-c(1:32)] ~  NH4 +NO3 + pHH2O + Clay + Silt + Sand  + GWC + Total.C + Total.N, method = "bray", data = new.data, perm=1000)
+adonis
+# Terms added sequentially (first to last)
+
+adonis = adonis(new.data[,-c(1:32)] ~  Total.N + NH4 +NO3 + pHH2O + Clay + Silt + Sand  + GWC + Total.C, method = "bray", data = new.data, perm=1000)
+adonis
+# Terms added sequentially (first to last)
+
+adonis = adonis(new.data[,-c(1:32)] ~ Total.C +  Total.N + NH4 +NO3 + pHH2O + Clay + Silt + Sand  + GWC, method = "bray", data = new.data, perm=1000)
+adonis
+# Terms added sequentially (first to last)
+
+#PERMANOVA associated with soil biology
+new.data <- read.csv("newdataOTUsP.csv", header=TRUE)
+soil.factors <- new.data[,15:17]
+cor(soil.factors)
+
+adonis = adonis(new.data[,-c(1:32)] ~ POXC +  PMC + PMN, method = "bray", data = new.data, perm=1000)
+adonis
+
+adonis = adonis(new.data[,-c(1:32)] ~ PMN + POXC +  PMC, method = "bray", data = new.data, perm=1000)
+adonis
+
+adonis = adonis(new.data[,-c(1:32)] ~ PMC + PMN + POXC, method = "bray", data = new.data, perm=1000)
+adonis
+
+#PERMANOVA associated with plant factors
+
+new.data <- read.csv("newdataOTUsP.csv", header=TRUE)
+plant.factors <- new.data[,24:27]
+cor(plant.factors)
+
+adonis = adonis(new.data[,-c(1:32)] ~   crop_numb + covercrop_g + weeds_g + crop_g , method = "bray", data = new.data, perm=1000)
+adonis
+
+adonis = adonis(new.data[,-c(1:32)] ~  crop_g + crop_numb + covercrop_g + weeds_g, method = "bray", data = new.data, perm=1000)
+adonis
+
+adonis = adonis(new.data[,-c(1:32)] ~ weeds_g + crop_g + crop_numb + covercrop_g, method = "bray", data = new.data, perm=1000)
+adonis
+
+adonis = adonis(new.data[,-c(1:32)] ~ covercrop_g + weeds_g + crop_g + crop_numb, method = "bray", data = new.data, perm=1000)
+adonis
+
+#PERMANOVA on PHLD gene TRFLP - PPS TRFLP - need to check
+
+data.phld <- read.csv("T-RF Matrix cut new", header=TRUE)
+str(data.phld)
+adonis = adonis(data.phld[,-c(1:9)] ~ trt, method = "bray", data = data.phld, perm=1000)
+adonis
+adonis = adonis(data.phld[,-c(1:9)] ~ rotation, method = "bray", data = data.phld, perm=1000)
+adonis
+
+new.data <- read.csv("T-RF Matrix cut new.csv", header=TRUE)
+sampleREL.dist <- vegdist(decostand((new.data[,-c(1:9)]),method="log"),method="bray")
+WL_pcoa <- cmdscale(sampleREL.dist,k=3,eig=TRUE,add=FALSE)
+explainvar1 <- round(WL_pcoa$eig[1]/sum(WL_pcoa$eig)*100,2)
+explainvar2 <- round(WL_pcoa$eig[2]/sum(WL_pcoa$eig)*100,2)
+explainvar3 <- round(WL_pcoa$eig[3]/sum(WL_pcoa$eig)*100,2)
+explainvar1
+explainvar2
+explainvar3
+pcoap <- merge(as.data.frame(WL_pcoa$points),new.data$rotation, by=0,all.x=T)
+rownames(pcoap) <- rownames(WL_pcoa$points)
+treatments <- new.data$rotation
+levels(treatments) <- c("fallow", "CSW-2cov", "CSW-1cov", "CSW", "CS", "C-1cov", "C", "S", "W")
+points <- cbind(as.data.frame(WL_pcoa$points), treatments)
+L.centroids <- melt(points, id="treatments", measure.vars = c("V1", "V2", "V3"))
+centroids <- cast(L.centroids, treatments ~ variable, mean)
+centroids <- cast(L.centroids, treatments ~ variable, fun.aggregate=c(mean,se))
+write.csv(centroids, file="WL.centroids.csv")
+
+par(mar=c(6,6,1,1), oma=c(3,1,1,1)+0.1 )
+x.dim <- c(min(pcoap$V1)-(max(pcoap$V1)*0.1),max(pcoap$V1)+(max(pcoap$V1)*0.1))
+x.dim <- c(-1, 1)
+y.dim <- c(min(pcoap$V2)-(max(pcoap$V2)*0.1),max(pcoap$V2)+(max(pcoap$V2)*0.1))
+plot(pcoap$V1, pcoap$V2, xlab=paste("PCoA Axis 1 (",explainvar1, "%)", sep=""), ylab=paste("PCoA Axis 2 (",explainvar2, "%)", sep=""), xlim=x.dim, ylim=y.dim, pch=16, cex=2.0, type="n",xaxt="n",yaxt="n", cex.lab=1.5, cex.axis=1.2)
+axis(side=1, las=1)
+axis(side=2, las=1)
+abline(h=0, lty="dotted")
+abline(v=0, lty="dotted")
+box(lwd=2)
+points(pcoap$V1, pcoap$V2, pch=19, cex=2.0, bg="gray", col="gray")
+text(pcoap$V1, pcoap$V2, labels=pcoap$y, pos=3)
+ordiellipse(cbind(pcoap$V1, pcoap$V2), pcoap$y, kind="se", conf=0.95, lwd=2, draw = "polygon", col="gray", border = "black", label=TRUE, cex=2)
+levels(treatments) <- c("fallow", "CSW-2cov", "CSW-1cov", "CSW", "CS", "C-1cov", "C", "S", "W")
+myColors <- c("#FFF000", "#CCFF00", "#33CC33", "#339933", "#336633", "#003300", "#FF9933", "#3399FF", "#663300")
+names(myColors) <- levels(treatments)
+
+```
+
+# Microbial Ordinations
+
+## Principal Coordinates Ordination
+```{r}
+png(filename="../figures/WL.bac.PCoA.png",
+    width = 1200, height = 800, res = 96*2)
+# Create Distance Matrix
+sampleREL.dist <- vegdist(WLdataREL, method="bray")
+
+# Principal Coordinates Analysis
+WL_pcoa <- cmdscale(sampleREL.dist, k=3, eig=TRUE, add=FALSE)
+  # Classical (Metric) Multidimensional Scaling; returns PCoA coordinates
+  # eig=TRUE returns eigenvalues; k = # of dimensions to calculate
+
+# Remove Odd Sites
+odd.sites <- row.names(WLdataREL[c(abs(WL_pcoa$points[, 1]) > 0.3), ])
+odd.sbys <- WLdataREL[c(abs(WL_pcoa$points[, 1]) > 0.3), ]
+mean(rowSums((WLdataREL > 0) * 1))
+rowSums((odd.sbys > 0) * 1)
+WLdataREL.2 <- WLdataREL[c(abs(WL_pcoa$points[, 1]) < 0.3), ]
+design2 <- design[c(abs(WL_pcoa$points[, 1]) < 0.3), ]
+treatments <- design2$Treatment
+
+# Create Distance Matrix
+sampleREL.dist2 <- vegdist(WLdataREL.2, method="bray")
+
+# Principal Coordinates Analysis
+WL_pcoa <- cmdscale(sampleREL.dist2, k=2, eig=TRUE, add=FALSE)
+# Classical (Metric) Multidimensional Scaling; returns PCoA coordinates
+# eig=TRUE returns eigenvalues; k = # of dimensions to calculate
+
+explainvar1 <- round(WL_pcoa$eig[1] / sum(WL_pcoa$eig), 3) * 100
+explainvar2 <- round(WL_pcoa$eig[2] / sum(WL_pcoa$eig), 3) * 100
+sum.eig <- sum(explainvar1, explainvar2)
+
+# Plot
+points <- cbind(as.data.frame(WL_pcoa$points), treatments)
+L.centroids <- melt(points, id="treatments", measure.vars = c("V1", "V2"))
+centroids <- cast(L.centroids, variable ~ treatments, mean)
+centroids.se <- cast(L.centroids, variable ~ treatments, se)
+centroids.sd <- cast(L.centroids, variable ~ treatments, sd)
+
+cent.dataframe <- t(data.frame(rbind(centroids[1,-1], centroids[2,-1],
+                             centroids.sd[1,-1],centroids.sd[2,-1])))
+colnames(cent.dataframe) <- c("V1", "V2", "V1e", "V2e")
+cent.treats <- rownames(cent.dataframe)
+
+myColors <- c("#FFF000", "#CCFF00", "#33CC33", "#000000", "#336633", "#FF9933") #pick new
+names(myColors) <- levels(cent.treats)
+colScale <- scale_colour_manual(values = myColors)
+
+# Define Plot Parameters
+par(mar = c(5, 5.5, 1, 1) + 0.1)
+layout(matrix(1:2, 1, 2), widths = c(4,2))
+
+plot(cent.dataframe[,1], cent.dataframe[,2], type = 'n', las = 1,
+     xlim = c(-0.1, 0.1), ylim = c(-0.1, 0.1),
+     xaxt = "n", xlab = "", yaxt = "n", ylab="")
+arrows(x0 = cent.dataframe[,1], 
+       y1 = cent.dataframe[,2] - cent.dataframe[,4], 
+       y0 = cent.dataframe[,2] + cent.dataframe[,4],
+       angle = 90,
+       length=0.1, lwd = 2, code = 3)
+arrows(y0 = cent.dataframe[,2], 
+       x1 = cent.dataframe[,1] - cent.dataframe[,3], 
+       x0 = cent.dataframe[,1] + cent.dataframe[,3],
+       angle = 90,
+       length=0.1, lwd = 2, code = 3)
+points(cent.dataframe[,1], cent.dataframe[,2], 
+       cex = 2.5, col = myColors, pch = 15)
+
+axis(side = 1, labels = T, las = 1, lwd.ticks = 2)
+axis(side = 2, labels = T, las = 1, lwd.ticks = 2)
+axis(side=1, lwd.ticks = 2, tck = -0.02, labels=F, cex.axis=1)
+axis(side=3, lwd.ticks = 2, tck = -0.02, labels=F, cex.axis=1)
+axis(side=1, lwd.ticks = 2, tck = 0.01, labels=F, cex.axis=1)
+axis(side=3, lwd.ticks = 2, tck = 0.01, labels=F, cex.axis=1)
+axis(side = 2, lwd.ticks = 2, tck = -0.02, labels=F, cex.axis=1)
+axis(side = 4, lwd.ticks = 2, tck = -0.02, labels=F, cex.axis=1)
+axis(side = 2, lwd.ticks = 2, tck = 0.01, labels=F, cex.axis=1)
+axis(side = 4, lwd.ticks = 2, tck = 0.01, labels=F, cex.axis=1)
+
+mtext(paste("PCoA 1 (", explainvar1, "%)", sep = ""), side = 1, line = 3, cex = 1.5)
+mtext(paste("PCoA 2 (", explainvar2, "%)", sep = ""), side = 2, line = 3.5, cex = 1.5)
+      
+box(lwd = 2)
+
+par(mar = c(5, 0, 1, 1) + 0.1)
+plot.new()
+
+legend(0, 1, legend = cent.treats, col = myColors, 
+       pch = 15, cex = 0.9, bty = 'n', inset = c(0.1, 0.05),
+       y.intersp = 1.25)
+
+
+# Close Plot Device
+dev.off()
+graphics.off()
+#```
+## Show Plot
+#```{r}
+img <- readPNG("../figures/WL.bac.PcoA.png")
+grid.raster(img)
+```
+
