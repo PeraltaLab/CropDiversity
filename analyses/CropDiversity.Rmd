@@ -46,6 +46,25 @@ require("ade4")
 require("grid"); require("png")
 ```
 
+# Environmental Data
+```{r}
+# Import Environmental Data
+design.in <- read.csv("../data/BDsoil_exptdesign.csv", row.names = 1)
+
+# ID S and W treatments
+SnW <- rownames(design.in[which(design.in$rotation == "S" | 
+                                  design.in$rotation == "W"), ])
+
+# Remove S and W treatments
+design <- design.in[-(which(rownames(design.in) %in% SnW)), ]
+design <- droplevels(design)
+
+# Define Treatments
+treatments <- design$rotation
+levels(treatments) <- c("fallow", "CSW-2cov", "CSW-1cov", "CSW", 
+                        "CS", "C1cov", "C")
+
+```
 
 # Microbial Data
 ```{r}
@@ -53,8 +72,12 @@ require("grid"); require("png")
 # Import Raw Data
 BDdata.in <- read.otu("../data/BD.shared")
 
-# Remove Mock Community
-BDdata.in2 <- BDdata.in[which(rownames(BDdata.in) != "Mock"), ]
+# Remove Mock Community, Blank and Undetermined
+BDdata.in2 <- BDdata.in[grepl("BD[0-9][0-9]", rownames(BDdata.in)), ]
+
+# Remove S and W Treatments
+SnW2 <- gsub("-", "", SnW)
+BDdata.in2 <- BDdata.in2[-(which(rownames(BDdata.in2) %in% SnW2)), ]
 
 # Remove OTUs with less than two occurences across all sites
 BDdata <- BDdata.in2[, which(colSums(BDdata.in2) >= 2)]
@@ -77,23 +100,16 @@ BD.tax <- read.tax(taxonomy = "../data/BD.0.03.cons.taxonomy")
 
 # Plant Data
 ```{r}
-BDveg <- read.csv("../data/BDveg.csv", row.names = 1)
+BDveg.in <- read.csv("../data/BDveg.csv", row.names = 1)
+
+# Remove S and W Treatments
+BDveg <- BDveg.in[-(which(rownames(BDveg.in) %in% SnW)), ]
 
 # plant data as discrete and continuous biomass data: rotation	crop_numb	covercrop_g	weeds_g	crop_g	biomass_total	covercrop_prop	weeds_prop	crop_prop
 ```
 
-# Environmental Data
-```{r}
-# Import Environmental Data
-
-design <- read.csv("../data/BDsoil_exptdesign.csv", row.names = 1)
-treatments <- design$rotation
-levels(treatments) <- c("fallow", "CSW-2cov", "CSW-1cov", "CSW", 
-                        "CS", "C1cov", "C", "S", "W")
-#DO NOT include analysis of "S" and "W" treatments
-```
-
-# Subset Data - need help subsetting, Mario
+# Subset Data - Remove S & W Treatments 
+#### AP can remove now ####
 ```{r}
 #subset do not include S and W
 #Note latest figures and table previously generated are located in figures_current folder
