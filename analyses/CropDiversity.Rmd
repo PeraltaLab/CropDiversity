@@ -35,15 +35,16 @@ se <- function(x, ...){sd(x, na.rm = TRUE)/sqrt(length(na.omit(x)))}
 ci <- function(x, ...){1.96 * sd(x,na.rm = TRUE)}
 
 # Code Dependencies
-# source("../bin/DiversityFunctions.R")
+source("../bin/DiversityFunctions.R")
 source("../bin/MothurTools.R")
 require("vegan")
+require("nlme")
 require("reshape")
 #require("BiodiversityR")
 # require("ecodist")
 require("ggplot2")
 require("ade4")
-require("grid"); require("png")
+require("png")
 ```
 
 # Environmental Data
@@ -108,29 +109,50 @@ BDveg <- BDveg.in[-(which(rownames(BDveg.in) %in% SnW)), ]
 # plant data as discrete and continuous biomass data: rotation	crop_numb	covercrop_g	weeds_g	crop_g	biomass_total	covercrop_prop	weeds_prop	crop_prop
 ```
 
-# Subset Data - Remove S & W Treatments 
-#### AP can remove now ####
-```{r}
-#subset do not include S and W
-#Note latest figures and table previously generated are located in figures_current folder
-
-data.subsetNoS <- droplevels(subset(new.data, rotation != "S"))
-str(data.subsetNoS$rotation)
-data.subsetNoSW <- droplevels(subset(data.subsetNoS, rotation != "W"))
-str(data.subsetNoSW$rotation)
-data.subsetNoSW
-str(data.subsetNoSW)
-```
-
 # Diversity Metrics - Hypothesis Testing
 ```{r}
+# Rarefy Abundances (min abundance is 267,170. We sampling to 200,000)
+min(rowSums(BDdata))
+BDdata.r <- rrarefy(BDdata, 200000)
 
-#16S rRNA total bacterial diversity - update file names
+# Fisher's Alpha
+fisher <- fisher.alpha(BDdata.r)
+fisher
 
-newdata <- read.csv("OTUs.csv", header=TRUE)
+# Species Richness
+richness <- rowSums((BDdata.r >= 1))
 
-richness <- fisher.alpha(newdata[,-c(1:1)])
-richness
+# Simpson's Evenness
+simp.even <- apply(BDdata.r, 1, simp_even)
+
+# Alternative way for evenness (note: uses D = sum[p_i^2] not corrected D)
+#simp.even2 <- diversity(BDdata.r, "invsimpson")/specnumber(BDdata.r)
+
+# Shannon Diversity (my function gets the same answer)
+shannon <- diversity(BDdata.r, "shannon")
+
+# Hypothesis Testing
+# First Check the order
+length(design$rotation) == length(fisher)
+all.equal(gsub("-", "", rownames(design)), names(fisher))
+
+fisher.lm <- lme(fisher ~ rotation, random = ~1|block, data = design)
+anova(fisher.lm)
+
+richness.lm <- lme(richness ~ rotation, random = ~1|block, data = design)
+anova(richness.lm)
+
+evenness.lm <- lme(simp.even ~ rotation, random = ~1|block, data = design)
+anova(evenness.lm)
+
+shannon.lm <- lme(shannon ~ rotation, random = ~1|block, data = design)
+anova(shannon.lm)
+```
+
+
+# Not sure what all of this is
+
+```{r}
 write.table(richness, file="richness.csv", sep=",", col.names=NA)
 
 Treatment <- read.csv("Treatment.csv", header=TRUE)
