@@ -362,7 +362,7 @@ treatments <- phld$rotation
 levels(treatments) <- c("fallow", "CSW-2cov", "CSW-1cov", "CSW", 
                         "CS", "C-1cov", "C")
 
-phld.test <- lapply(phld[,-c(1:7)], as.numeric)
+phld.test <- data.frame(lapply(phld[,-c(1:7)], as.numeric))
 str(phld.test)
 
 # Make Relative Abundance Matrices ###need to fix Error in 1:dim(phld.test)[1] : argument of length 0
