@@ -62,10 +62,8 @@ design <- design.in[-(which(rownames(design.in) %in% SnW)), ]
 design <- droplevels(design)
 
 # Define Treatments ###check order of treatments
-treatments <- design$rotation
-levels(treatments) <- c("fallow", "CSW-2cov", "CSW-1cov", "CSW", 
-                        "CS", "C-1cov", "C")
-
+treatments <- factor(design$rotation, levels = c("fallow", "CSW-2cov", 
+                     "CSW-1cov", "CSW", "CS", "C-1cov", "C"))
 ```
 
 # Microbial Data
@@ -380,9 +378,8 @@ adonis = adonis(new.phldREL2[,-c(1:7)] ~ rotation+block, method = "bray", data =
 adonis
 
 # Define Treatments ###check order of treatments
-treatments <- new.phldREL2$rotation
-levels(treatments) <- c("fallow", "CSW-2cov", "CSW-1cov", "CSW", 
-                        "CS", "C-1cov", "C")
+treatments <- factor(new.phldREL2$rotation, levels = c("fallow", "CSW-2cov", 
+                     "CSW-1cov", "CSW", "CS", "C-1cov", "C")) 
 
 ```
 
