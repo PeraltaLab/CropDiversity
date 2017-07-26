@@ -45,6 +45,7 @@ require("reshape")
 require("ggplot2")
 require("ade4")
 require("png")
+require ("agricolae")
 ```
 
 # Environmental Data
@@ -345,19 +346,50 @@ adonis
 
 #PERMANOVA on PHLD gene TRFLP - PPS TRFLP - need to check
 ```{r}
-phld <- read.csv("../data/PHLD_TRFLP_NoSW.csv", header=TRUE)
+phld.in <- read.csv("../data/T-RF Matrix_Original_AP.csv", row.names = 1)
+
+# ID S and W treatments
+SnW <- rownames(phld.in[which(phld.in$rotation == "S" | 
+                                  phld.in$rotation == "W"), ])
+
+# Remove S and W treatments
+phld <- phld.in[-(which(rownames(phld.in) %in% SnW)), ]
+phld <- droplevels(phld)
 str(phld)
 
-adonis = adonis(phld[,-c(1:9)] ~ rotation, method = "bray", data = phld, perm=1000)
+# Define Treatments
+treatments <- phld$rotation
+levels(treatments) <- c("fallow", "CSW-2cov", "CSW-1cov", "CSW", 
+                        "CS", "C-1cov", "C")
+
+phld.test <- lapply(phld[,-c(1:7)], as.numeric)
+str(phld.test)
+
+# Make Relative Abundance Matrices ###need to fix Error in 1:dim(phld.test)[1] : argument of length 0
+
+phldREL <- phld.test
+for(i in 1:dim(phld.test)[1]){
+  phldREL[i,] <- phld.test[i,]/sum(phld.test[i,], na.rm=T)
+}
+
+phld.new <-cbind(phld[,c(1:7)],phld.test)
+str(phld.new)
+
+
+#PERMANOVA on rotation effect - no S and W
+new.data <-cbind(design,BDdataREL)
+adonis = adonis(new.data[,-c(1:15)] ~ rotation+block, method = "bray", data = new.data, perm=1000)
+adonis
+
+adonis = adonis(phld[,-c(1:7)] ~ rotation, method = "bray", data = phld, perm=1000)
 adonis
 ```
 
 #Ordination of PHLD disease suppression functional gene - dropped S and W
-```{r}
 ## Principal Coordinates Ordination
 ```{r}
 # Create Distance Matrix
-sampleREL.dist <- vegdist(decostand((phld[,-c(1:9)]),method="log"),method="bray")
+sampleREL.dist <- vegdist(phld[,-c(1:9)], method="bray")
 
 # Principal Coordinates Analysis
 phld_pcoa <- cmdscale(sampleREL.dist,k=3,eig=TRUE,add=FALSE)
