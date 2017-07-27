@@ -64,6 +64,8 @@ design <- droplevels(design)
 # Define Treatments ###check order of treatments
 treatments <- factor(design$rotation, levels = c("fallow", "CSW-2cov", 
                      "CSW-1cov", "CSW", "CS", "C-1cov", "C"))
+
+all.equal(as.character(design$rotation), as.character(treatments))
 ```
 
 # Microbial Data
@@ -95,7 +97,8 @@ for(i in 1:dim(BDdata)[1]){
 BDdataREL.log <- decostand(BDdataREL, method="log")
 
 # Import Taxonomy File
-BD.tax <- read.tax(taxonomy = "../data/BD.0.03.cons.taxonomy")
+BD.tax <- read.tax(taxonomy = "../data/BD.0.03.cons.taxonomy", format = "rdp", 
+                   tax.levels = 6, col.tax = 3)
 ```
 
 # Plant Data
@@ -189,7 +192,7 @@ HSD <- HSD.test(prnd.lm2,"Rotation", console=TRUE)
 
 p <- ggplot(data.prnd, aes(Rotation,copies))
 p + geom_boxplot() + theme_bw()
-p + geom_boxplot() + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +theme(axis.title=element_text(vjust=1,size=16,face="bold"), axis.text=element_text(size=14), axis.text.x = element_text(vjust=0.65, hjust=0.5, angle=30, size=14), panel.border = element_rect(colour = "black",size=1.25)) + theme(axis.ticks.length=unit(0.3,"cm")) + xlab("Crop Diversity") + ylab("Log copy number of prnD gene/g soil") +scale_x_discrete(breaks=c("fallow", "CSW-2cov", "CSW-1cov", "CSW", "CS", "C-1cov", "C"), labels=c("fallow", "CSW_2cov", "CSW_1cov", "CSW", "CS","C_1cov", "mC"))
+p + geom_boxplot() + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +theme(axis.title=element_text(vjust=1,size=16,face="bold"), axis.text=element_text(size=14), axis.text.x = element_text(vjust=0.65, hjust=0.5, angle=30, size=14), panel.border = element_rect(colour = "black",size=1.25)) + theme(axis.ticks.length=unit(0.3,"cm")) + xlab("Crop Diversity") + ylab("prnD genes/g soil\n(log copy number)") +scale_x_discrete(breaks=c("fallow", "CSW-2cov", "CSW-1cov", "CSW", "CS", "C-1cov", "C"), labels=c("fallow", "CSW_2cov", "CSW_1cov", "CSW", "CS","C_1cov", "mC"))
 
 ggsave("../figures/prnDabundanceRplot.pdf", plot=last_plot(), device=NULL, path=NULL, scale=1, width=NA, height=NA, dpi=300, limitsize=TRUE)
 
@@ -418,6 +421,7 @@ adonis
 # Define Treatments ###check order of treatments
 treatments <- factor(new.phldREL2$rotation, levels = c("fallow", "CSW-2cov", 
                      "CSW-1cov", "CSW", "CS", "C-1cov", "C")) 
+all.equal(as.character(new.phldREL2$rotation), as.character(treatments))
 
 ```
 
@@ -426,7 +430,9 @@ treatments <- factor(new.phldREL2$rotation, levels = c("fallow", "CSW-2cov",
 ```{r}
 # TEST with original labels
 # Create Distance Matrix
-sampleREL.dist <- vegdist(new.phldREL2[,-c(1:7)], method="bray")
+phldREL3 <- new.phldREL2[,-c(1:7)]
+design <- new.phldREL2[,c(1:7)]
+sampleREL.dist <- vegdist(phldREL3, method="bray")
 
 # Principal Coordinates Analysis
 BD_pcoa <- cmdscale(sampleREL.dist, k=3, eig=TRUE, add=FALSE)
@@ -437,11 +443,13 @@ explainvar1 <- round(BD_pcoa$eig[1] / sum(BD_pcoa$eig), 3) * 100
 explainvar2 <- round(BD_pcoa$eig[2] / sum(BD_pcoa$eig), 3) * 100
 sum.eig <- sum(explainvar1, explainvar2)
 
-points <- cbind(as.data.frame(BD_pcoa$points), new.phldREL2$rotation)
-L.centroids <- melt(points, id="new.phldREL2$rotation", measure.vars = c("V1", "V2"))
-centroids <- cast(L.centroids, variable ~ new.phldREL2$rotation, mean)
-centroids.se <- cast(L.centroids, variable ~ new.phldREL2$rotation, se)
-centroids.sd <- cast(L.centroids, variable ~ new.phldREL2$rotation, sd)
+all.equal(rownames(design), rownames(BD_pcoa$points))
+
+points <- cbind(as.data.frame(BD_pcoa$points), design$rotation)
+L.centroids <- melt(points, id="design$rotation", measure.vars = c("V1", "V2"))
+centroids <- cast(L.centroids, variable ~ design$rotation, mean)
+centroids.se <- cast(L.centroids, variable ~ design$rotation, se)
+centroids.sd <- cast(L.centroids, variable ~ design$rotation, sd)
 
 cent.dataframe <- t(data.frame(rbind(centroids[1,-1], centroids[2,-1],
                              centroids.sd[1,-1],centroids.sd[2,-1])))
@@ -464,7 +472,7 @@ theme(panel.background = element_blank()) +
 ```{r}
 # UPDATE and fix color/labels
 # Create Distance Matrix
-sampleREL.dist <- vegdist(new.phldREL2[,-c(1:7)], method="bray")
+sampleREL.dist <- vegdist(phldREL3, method="bray")
 
 # Principal Coordinates Analysis
 phld_pcoa <- cmdscale(sampleREL.dist,k=3,eig=TRUE,add=FALSE)
@@ -483,6 +491,8 @@ sum.eig <- sum(explainvar1, explainvar2)
 
 # Plot PPS TRFLP Ordination
 ```{r}
+all.equal(as.character(treatments), as.character(design$rotation))
+
 points <- cbind(as.data.frame(phld_pcoa$points), treatments)
 L.centroids <- melt(points, id="treatments", measure.vars = c("V1", "V2"))
 centroids <- cast(L.centroids, variable ~ treatments, mean)
