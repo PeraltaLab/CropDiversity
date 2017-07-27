@@ -212,6 +212,44 @@ adonis
 
 ## Principal Coordinates Ordination
 ```{r}
+# TEST with original labels
+# Create Distance Matrix
+sampleREL.dist <- vegdist(BDdataREL, method="bray")
+
+# Principal Coordinates Analysis
+BD_pcoa <- cmdscale(sampleREL.dist, k=3, eig=TRUE, add=FALSE)
+  # Classical (Metric) Multidimensional Scaling; returns PCoA coordinates
+  # eig=TRUE returns eigenvalues; k = # of dimensions to calculate
+
+explainvar1 <- round(BD_pcoa$eig[1] / sum(BD_pcoa$eig), 3) * 100
+explainvar2 <- round(BD_pcoa$eig[2] / sum(BD_pcoa$eig), 3) * 100
+sum.eig <- sum(explainvar1, explainvar2)
+
+points <- cbind(as.data.frame(BD_pcoa$points), design$rotation)
+L.centroids <- melt(points, id="design$rotation", measure.vars = c("V1", "V2"))
+centroids <- cast(L.centroids, variable ~ design$rotation, mean)
+centroids.se <- cast(L.centroids, variable ~ design$rotation, se)
+centroids.sd <- cast(L.centroids, variable ~ design$rotation, sd)
+
+cent.dataframe <- t(data.frame(rbind(centroids[1,-1], centroids[2,-1],
+                             centroids.sd[1,-1],centroids.sd[2,-1])))
+colnames(cent.dataframe) <- c("V1", "V2", "V1e", "V2e")
+cent.treats <- rownames(cent.dataframe)
+
+explainvar1 #Include in PCoA 1 axis label 29.3%
+explainvar2 #Include in PCoA 2 axis label 14.0%
+                                        
+df <- as.data.frame(cent.dataframe)
+p <- ggplot(df, aes(x=V1, y=V2, colour=cent.treats)) + theme_bw() 
+p + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) + 
+theme(panel.background = element_blank()) + 
+  geom_errorbarh(aes(xmax=V1+V1e, xmin=V1-V1e, height=0.01), colour="black") +    
+  geom_errorbar(aes(ymax=V2+V2e, ymin=V2-V2e, width=0.01), colour="black") + 
+  geom_point(size=5) 
+
+```
+
+```{r}
 # Create Distance Matrix
 sampleREL.dist <- vegdist(BDdataREL, method="bray")
 
@@ -344,7 +382,7 @@ adonis
 
 #PERMANOVA on PHLD gene TRFLP - PPS TRFLP - need to check
 ```{r}
-phld.in <- read.csv("../data/T-RF Matrix_Original_AP.csv", row.names = 1)
+phld.in <- read.csv("../data/TRFLP_Original.csv", row.names = 1)
 
 # ID S and W treatments
 SnW <- rownames(phld.in[which(phld.in$rotation == "S" | 
@@ -386,6 +424,45 @@ treatments <- factor(new.phldREL2$rotation, levels = c("fallow", "CSW-2cov",
 #Ordination of PHLD disease suppression functional gene - dropped S and W
 ## Principal Coordinates Ordination
 ```{r}
+# TEST with original labels
+# Create Distance Matrix
+sampleREL.dist <- vegdist(new.phldREL2[,-c(1:7)], method="bray")
+
+# Principal Coordinates Analysis
+BD_pcoa <- cmdscale(sampleREL.dist, k=3, eig=TRUE, add=FALSE)
+  # Classical (Metric) Multidimensional Scaling; returns PCoA coordinates
+  # eig=TRUE returns eigenvalues; k = # of dimensions to calculate
+
+explainvar1 <- round(BD_pcoa$eig[1] / sum(BD_pcoa$eig), 3) * 100
+explainvar2 <- round(BD_pcoa$eig[2] / sum(BD_pcoa$eig), 3) * 100
+sum.eig <- sum(explainvar1, explainvar2)
+
+points <- cbind(as.data.frame(BD_pcoa$points), new.phldREL2$rotation)
+L.centroids <- melt(points, id="new.phldREL2$rotation", measure.vars = c("V1", "V2"))
+centroids <- cast(L.centroids, variable ~ new.phldREL2$rotation, mean)
+centroids.se <- cast(L.centroids, variable ~ new.phldREL2$rotation, se)
+centroids.sd <- cast(L.centroids, variable ~ new.phldREL2$rotation, sd)
+
+cent.dataframe <- t(data.frame(rbind(centroids[1,-1], centroids[2,-1],
+                             centroids.sd[1,-1],centroids.sd[2,-1])))
+colnames(cent.dataframe) <- c("V1", "V2", "V1e", "V2e")
+cent.treats <- rownames(cent.dataframe)
+
+explainvar1 #Include in PCoA 1 axis label 29.3%
+explainvar2 #Include in PCoA 2 axis label 14.0%
+                                        
+df <- as.data.frame(cent.dataframe)
+p <- ggplot(df, aes(x=V1, y=V2, colour=cent.treats)) + theme_bw() 
+p + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) + 
+theme(panel.background = element_blank()) + 
+  geom_errorbarh(aes(xmax=V1+V1e, xmin=V1-V1e, height=0.01), colour="black") +    
+  geom_errorbar(aes(ymax=V2+V2e, ymin=V2-V2e, width=0.01), colour="black") + 
+  geom_point(size=5) 
+
+```
+
+```{r}
+# UPDATE and fix color/labels
 # Create Distance Matrix
 sampleREL.dist <- vegdist(new.phldREL2[,-c(1:7)], method="bray")
 
