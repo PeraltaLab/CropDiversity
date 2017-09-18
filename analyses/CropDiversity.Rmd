@@ -133,15 +133,30 @@ anova(richness.lm)
 evenness.lm <- lme(simp.even ~ rotation, random = ~1|block, data = design)
 anova(evenness.lm)
 
+J.lm <- lme(J ~ rotation, random = ~1|block, data = design)
+anova(J.lm)
+
 shannon.lm <- lme(shannon ~ rotation, random = ~1|block, data = design)
 anova(shannon.lm)
 
 library(agricolae)
 summary(shannon.lm)
 shannon.lm2 <- lm(shannon ~ rotation, data = BD.DIVsoilmicrobes)
+HSD.shannon <- HSD.test(shannon.lm2,"rotation", console=TRUE)
+
+summary(richness.lm)
+richness.lm2 <- lm(richness ~ rotation, data = BD.DIVsoilmicrobes)
 HSD <- HSD.test(shannon.lm2,"rotation", console=TRUE)
+
+summary(evenness.lm)
+evenness.lm2 <- lm(simp.even ~ rotation, data = BD.DIVsoilmicrobes)
+HSD <- HSD.test(evenness.lm2,"rotation", console=TRUE)
+
+summary(J.lm)
+J.lm2 <- lm(J ~ rotation, data = BD.DIVsoilmicrobes)
+HSD <- HSD.test(J.lm2,"rotation", console=TRUE)
 ```
-#boxplot shannon diversity #still need to add postdoc labels on graph
+#boxplot shannon diversity #still need to add posthoc labels on graph
 ```{r}
 #need to add code to get Tukey group differences graphed above bars
 p <- ggplot(BD.DIVsoilmicrobes, aes(rotation,shannon))
@@ -154,10 +169,46 @@ p + geom_boxplot() + theme_bw() + theme(panel.grid.major = element_blank(), pane
   scale_x_discrete(breaks=c("fallow", "CSW-2cov", "CSW-1cov", "CSW", "CS", "C-1cov", "C"),   
   labels=c("fallow", "CSW_2cov", "CSW_1cov", "CSW", "CS","C_1cov", "mC"))
 
+# PostHoc Test DOESNT WORK YET "error: Error in shannon$stats : $ operator is invalid for atomic vectors"
+  tuk <- HSD.test(aov(BD.DIVsoilmicrobes$shannon ~ treatments), "treatments")
+  grp <- HSD.shannon$groups[c(match(levels(treatments), gsub(" ", "", HSD.shannon$groups$trt))), ]
+  text(x = seq_along(levels(treatments)), 
+       y = shannon$stats[5, ] + ((par("usr")[4] - par("usr")[3]) * 0.05), 
+       labels = grp$M)
 ggsave("../figures/shannonRplot.pdf", plot=last_plot(), device=NULL, path=NULL, scale=1, width=NA, height=NA, dpi=300, limitsize=TRUE)
 ```
+#boxplot richness #still need to add posthoc labels on graph
+```{r}
+#need to add code to get Tukey group differences graphed above bars
+p <- ggplot(BD.DIVsoilmicrobes, aes(rotation,richness))
+p + geom_boxplot() + theme_bw()
+p + geom_boxplot() + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor =     element_blank(), axis.line = element_line(colour = "black")) +   
+  theme(axis.title=element_text(vjust=1,size=16,face="bold"), axis.text=element_text(size=14), 
+  axis.text.x = element_text(vjust=0.65, hjust=0.5, angle=30, size=14), panel.border =   
+  element_rect(colour = "black",size=1.25)) + theme(axis.ticks.length=unit(0.3,"cm")) + 
+  xlab("Crop Diversity") + ylab("OTU Richness") + 
+  scale_x_discrete(breaks=c("fallow", "CSW-2cov", "CSW-1cov", "CSW", "CS", "C-1cov", "C"),   
+  labels=c("fallow", "CSW_2cov", "CSW_1cov", "CSW", "CS","C_1cov", "mC"))
 
-#boxplot prnD disease suppression gene abundance - #still need to add postdoc labels on graph
+ggsave("../figures/richnessRplot.pdf", plot=last_plot(), device=NULL, path=NULL, scale=1, width=NA, height=NA, dpi=300, limitsize=TRUE)
+```
+#boxplot Pielou's Evenness Index J #still need to add posthoc labels on graph
+```{r}
+#need to add code to get Tukey group differences graphed above bars
+p <- ggplot(BD.DIVsoilmicrobes, aes(rotation,J))
+p + geom_boxplot() + theme_bw()
+p + geom_boxplot() + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor =     element_blank(), axis.line = element_line(colour = "black")) +   
+  theme(axis.title=element_text(vjust=1,size=16,face="bold"), axis.text=element_text(size=14), 
+  axis.text.x = element_text(vjust=0.65, hjust=0.5, angle=30, size=14), panel.border =   
+  element_rect(colour = "black",size=1.25)) + theme(axis.ticks.length=unit(0.3,"cm")) + 
+  xlab("Crop Diversity") + ylab("Pielou's Evenness Index (J')") + 
+  scale_x_discrete(breaks=c("fallow", "CSW-2cov", "CSW-1cov", "CSW", "CS", "C-1cov", "C"),   
+  labels=c("fallow", "CSW_2cov", "CSW_1cov", "CSW", "CS","C_1cov", "mC"))
+
+ggsave("../figures/PielouJRplot.pdf", plot=last_plot(), device=NULL, path=NULL, scale=1, width=NA, height=NA, dpi=300, limitsize=TRUE)
+```
+
+#boxplot prnD disease suppression gene abundance - #still need to add posthoc labels on graph
 ```{r}
 data.prnd <- read.csv("../data/PRND gene_NoSW.csv", header=TRUE)
 
@@ -177,7 +228,6 @@ ggsave("../figures/prnDabundanceRplot.pdf", plot=last_plot(), device=NULL, path=
 
 reg <- lm(copies~crop+carbon+moisture, data=data.prnd)
 summary(reg)
-
 ```
 
 # Simple Hypothesis Testing - 
