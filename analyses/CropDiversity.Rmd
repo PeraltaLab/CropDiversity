@@ -158,20 +158,36 @@ HSD <- HSD.test(J.lm2,"rotation", console=TRUE)
 ```
 #boxplot shannon diversity #still need to add posthoc labels on graph
 ```{r}
+# PostHoc Test 
+tuk <- HSD.test(aov(BD.DIVsoilmicrobes$shannon ~ treatments), "treatments")
+grp <- tuk$groups[c(match(c("C", "C-1cov", "CS", "CSW", "CSW-1cov", 
+                            "CSW-2cov", "fallow" ), rownames(tuk$groups))), ]
+
 #need to add code to get Tukey group differences graphed above bars
 p <- ggplot(BD.DIVsoilmicrobes, aes(rotation,shannon))
 p + geom_boxplot() + theme_bw()
-p + geom_boxplot() + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor =     element_blank(), axis.line = element_line(colour = "black")) +   
-  theme(axis.title=element_text(vjust=1,size=16,face="bold"), axis.text=element_text(size=14), 
-  axis.text.x = element_text(vjust=0.65, hjust=0.5, angle=30, size=14), panel.border =   
-  element_rect(colour = "black",size=1.25)) + theme(axis.ticks.length=unit(0.3,"cm")) + 
-  xlab("Crop Diversity") + ylab("Shannon Diversity Index (H')") + 
-  scale_x_discrete(breaks=c("fallow", "CSW-2cov", "CSW-1cov", "CSW", "CS", "C-1cov", "C"),   
-  labels=c("fallow", "CSW_2cov", "CSW_1cov", "CSW", "CS","C_1cov", "mC"))
 
-# PostHoc Test DOESNT WORK YET "error: Error in shannon$stats : $ operator is invalid for atomic vectors"
-  tuk <- HSD.test(aov(BD.DIVsoilmicrobes$shannon ~ treatments), "treatments")
-  grp <- HSD.shannon$groups[c(match(levels(treatments), gsub(" ", "", HSD.shannon$groups$trt))), ]
+plot.data <- ggplot_build(p)$data[[1]]
+grp.pos <- aggregate(y ~ x, plot.data, max)$y
+
+p + geom_boxplot() + theme_bw() + 
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        axis.line = element_line(colour = "black")) +   
+  theme(axis.title = element_text(vjust=1,size=16,face="bold"), 
+        axis.text = element_text(size=14), 
+        axis.text.x = element_text(vjust=0.65, hjust=0.5, angle=30, size=14), 
+        panel.border = element_rect(colour = "black",size=1.25)) + 
+  theme(axis.ticks.length=unit(0.3,"cm")) + 
+  xlab("Crop Diversity") + 
+  ylab("Shannon Diversity (H')") + 
+  scale_x_discrete(breaks=c("fallow", "CSW-2cov", "CSW-1cov", 
+                            "CSW", "CS", "C-1cov", "C"),   
+  labels=c("fallow", "CSW_2cov", "CSW_1cov", "CSW", "CS","C_1cov", "mC")) +
+  annotate("text", x = c(1:7), y = grp.pos + 0.02,
+           label = grp$groups)
+
+
   text(x = seq_along(levels(treatments)), 
        y = shannon$stats[5, ] + ((par("usr")[4] - par("usr")[3]) * 0.05), 
        labels = grp$M)
