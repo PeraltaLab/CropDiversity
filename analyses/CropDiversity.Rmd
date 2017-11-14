@@ -261,7 +261,7 @@ ggsave("../figures/PielouJRplot.pdf", plot=last_plot(), device=NULL, path=NULL, 
 ```{r}
 #library(Rmisc)
 #library(ggplot2)
-jpeg("../figures/DiversityAll.jpeg") #doesn't work
+jpeg("../figures/DiversityAll.jpeg", width = 480, height = 480 * 1.75) #doesn't work
 multiplot(H, rich, J, cols=1) #unable to save
 dev.off()
 
