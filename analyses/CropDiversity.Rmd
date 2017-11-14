@@ -223,6 +223,7 @@ ggsave("../figures/PielouJRplot.pdf", plot=last_plot(), device=NULL, path=NULL, 
 ```{r}
 jpeg("../figures/DiversityAll.jpeg", width = 480, height = 480 * 1.75)
 multiplot(H, rich, J, cols=1) #unable to save
+dev.off()
 
 #require(ggpubr)
 #ggarrange(H, rich, J + rremove("x.text"), labels = c("A", "B", "C"), ncol = 2, nrow = 2)
