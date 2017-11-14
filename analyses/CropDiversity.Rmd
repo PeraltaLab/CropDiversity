@@ -22,6 +22,7 @@ ci <- function(x, ...){1.96 * sd(x,na.rm = TRUE)}
 # Code Dependencies
 source("../bin/DiversityFunctions.R")
 source("../bin/MothurTools.R")
+source("../bin/multiplot.R")
 require("vegan")
 require("nlme")
 require("reshape")
@@ -258,12 +259,15 @@ ggsave("../figures/PielouJRplot.pdf", plot=last_plot(), device=NULL, path=NULL, 
 ```
 
 ```{r}
-library(Rmisc)
-jpeg("../figures/DiversityAll.jpeg") #doesn't work
+#library(Rmisc)
+#library(ggplot2)
+jpeg("../figures/DiversityAll.jpeg", width = 480, height = 480 * 1.75) #doesn't work
 multiplot(H, rich, J, cols=1) #unable to save
+dev.off()
 
-require(ggpubr)
-ggarrange(H, rich, J + rremove("x.text"), labels = c("A", "B", "C"), ncol = 2, nrow = 2)
+
+#require(ggpubr)
+#ggarrange(H, rich, J + rremove("x.text"), labels = c("A", "B", "C"), ncol = 2, nrow = 2)
 ```          
 #boxplot prnD disease suppression gene abundance - #still need to add posthoc labels on graph
 ```{r}
