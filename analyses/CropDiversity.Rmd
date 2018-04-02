@@ -159,7 +159,7 @@ summary(J.lm)
 J.lm2 <- lm(J ~ rotation, data = BD.DIVsoilmicrobes)
 HSD <- HSD.test(J.lm2,"rotation", console=TRUE)
 ```
-#boxplot shannon diversity #still need to add posthoc labels on graph
+#boxplot shannon diversity
 ```{r}
 # library
 library(multcompView)
@@ -222,13 +222,13 @@ ggsave("../figures/PielouJRplot.pdf", plot=last_plot(), device=NULL, path=NULL, 
 
 ```{r}
 jpeg("../figures/DiversityAll.jpeg", width = 480, height = 480 * 1.75)
-multiplot(H, rich, J, cols=1) #unable to save
+multiplot(H, rich, J, cols=1)
 dev.off()
 
 #require(ggpubr)
 #ggarrange(H, rich, J + rremove("x.text"), labels = c("A", "B", "C"), ncol = 2, nrow = 2)
 ```          
-#boxplot prnD disease suppression gene abundance - #still need to add posthoc labels on graph
+#boxplot prnD disease suppression gene abundance 
 ```{r}
 data.prnd <- read.csv("../data/PRND gene_NoSW.csv", header=TRUE)
 
@@ -257,6 +257,98 @@ new.data <-cbind(design,BDdataREL)
 adonis = adonis(new.data[,-c(1:15)] ~ rotation+block, method = "bray", data = new.data, perm=1000)
 adonis
 ```
+# Bacterial community indicator species analysis
+```{r}
+#bac.ind
+library("labdsv")
+trt.rotation <- design$rotation
+
+BDdataREL <- BDdataREL[, colSums(BDdataREL) > 0.05]
+bac.ind <- indval(BDdataREL, trt.rotation)
+levels(trt.rotation)
+summary(bac.ind)
+
+inds <- which(bac.ind$pval <= 0.05)
+bac.indicators <- as.data.frame(matrix(NA, nrow = length(inds), ncol = 4))
+colnames(bac.indicators) <- c("OTU", "Cluster", "IndVal", "Prob")
+
+bac.indicators$OTU <- names(inds)
+bac.indicators$Cluster <- bac.ind$maxcls[inds]
+bac.indicators$IndVal <- bac.ind$indcls[inds]
+bac.indicators$Prob <- bac.ind$pval[inds]
+
+ind.tax <- BD.tax[which(as.character(BD.tax$OTU) %in% bac.indicators$OTU), ]
+ind.tax <- ind.tax[match(ind.tax$OTU, bac.indicators$OTU), ]
+
+indicator.bac <- cbind(bac.indicators, ind.tax[, -c(1)])
+
+indicator.bac <- indicator.bac[order(as.numeric(indicator.bac$Cluster)), ]
+
+table(indicator.bac$Cluster)
+table(indicator.bac$Phylum)
+table(indicator.bac$Cluster)
+levels(trt.rotation)
+
+# Export Bacteria Indicator Table
+write.table(indicator.bac, "../data/BacterialIndicators.txt",
+            sep="\t", row.names = F, quote = F)
+```
+# OTU x treatment graph
+```{r}
+#new.data <-cbind(design,BDdataREL)
+OTUsub <- subset(new.data, select=c("Otu000013","Otu000015","Otu000022","Otu000076","Otu000002","Otu000060","Otu000046","Otu000061"))
+
+design.OTUsub <- cbind(design,OTUsub)
+p <- ggplot(design.OTUsub, aes(rotation,Otu000015))
+p + geom_boxplot() + theme_bw()
+p1 <- p + geom_boxplot() + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +theme(axis.title=element_text(vjust=1,size=16,face="bold"), axis.text=element_text(size=14), axis.text.x = element_text(vjust=0.65, hjust=0.5, angle=30, size=14), panel.border = element_rect(colour = "black",size=1.25)) + theme(axis.ticks.length=unit(0.3,"cm")) + xlab("Crop Diversity") + ylab("Relative Abundance") +scale_x_discrete(breaks=c("fallow", "CSW-2cov", "CSW-1cov", "CSW", "CS", "C-1cov", "C"), labels=c("fallow", "CSW_2cov", "CSW_1cov", "CSW", "CS","C_1cov", "mC"))+annotate("text", label = "OTU 15",x=7, y=0.0095, size = 4, colour = "black")
+
+p <- ggplot(design.OTUsub, aes(rotation,Otu000060))
+p + geom_boxplot() + theme_bw()
+p2 <- p + geom_boxplot() + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +theme(axis.title=element_text(vjust=1,size=16,face="bold"), axis.text=element_text(size=14), axis.text.x = element_text(vjust=0.65, hjust=0.5, angle=30, size=14), panel.border = element_rect(colour = "black",size=1.25)) + theme(axis.ticks.length=unit(0.3,"cm")) + xlab("Crop Diversity") + ylab("Relative Abundance") +scale_x_discrete(breaks=c("fallow", "CSW-2cov", "CSW-1cov", "CSW", "CS", "C-1cov", "C"), labels=c("fallow", "CSW_2cov", "CSW_1cov", "CSW", "CS","C_1cov", "mC"))+annotate("text", label = "OTU 60",x=7, y=0.0075, size = 4, colour = "black")
+
+p <- ggplot(design.OTUsub, aes(rotation,Otu000046))
+p + geom_boxplot() + theme_bw()
+p3 <- p + geom_boxplot() + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +theme(axis.title=element_text(vjust=1,size=16,face="bold"), axis.text=element_text(size=14), axis.text.x = element_text(vjust=0.65, hjust=0.5, angle=30, size=14), panel.border = element_rect(colour = "black",size=1.25)) + theme(axis.ticks.length=unit(0.3,"cm")) + xlab("Crop Diversity") + ylab("Relative Abundance") +scale_x_discrete(breaks=c("fallow", "CSW-2cov", "CSW-1cov", "CSW", "CS", "C-1cov", "C"), labels=c("fallow", "CSW_2cov", "CSW_1cov", "CSW", "CS","C_1cov", "mC"))+annotate("text", label = "OTU 46",x=7, y=0.007, size = 4, colour = "black")
+
+p <- ggplot(design.OTUsub, aes(rotation,Otu000061))
+p + geom_boxplot() + theme_bw()
+p4 <- p + geom_boxplot() + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +theme(axis.title=element_text(vjust=1,size=16,face="bold"), axis.text=element_text(size=14), axis.text.x = element_text(vjust=0.65, hjust=0.5, angle=30, size=14), panel.border = element_rect(colour = "black",size=1.25)) + theme(axis.ticks.length=unit(0.3,"cm")) + xlab("Crop Diversity") + ylab("Relative Abundance") +scale_x_discrete(breaks=c("fallow", "CSW-2cov", "CSW-1cov", "CSW", "CS", "C-1cov", "C"), labels=c("fallow", "CSW_2cov", "CSW_1cov", "CSW", "CS","C_1cov", "mC"))+annotate("text", label = "OTU 61",x=7, y=0.006, size = 4, colour = "black")
+
+jpeg(filename="../figures/OTUsubset.jpeg", width = 480, height = 480 * 1.75)
+multiplot(p1,p2,p3,p4,cols=1) 
+dev.off()
+
+```
+
+# Relating disease suppression function to bacterial community pattern using RDA
+```{r}
+#Redundancy Analysis
+dim(new.data)
+dim(data.prnd)
+str(data.prnd)
+df.env.bcc <- cbind(data.prnd,BDdataREL)
+str(df.env.bcc)
+str(BDdataREL)
+
+dbRDA <- dbrda((df.env.bcc[,-c(1:13)]) ~ df.env.bcc$copies, distance = "bray")
+anova(dbRDA)
+RsquareAdj(dbRDA)
+
+#try dbRDA with cov crop only
+
+df.env.bcc.1 <- subset(df.env.bcc, Rotation=="CSW-1cov")
+df.env.bcc.2 <- subset(df.env.bcc, Rotation=="CSW-2cov")
+dim(df.env.bcc.1)
+dim(df.env.bcc.2)
+df.env.bcc.CC <- rbind(df.env.bcc.1, df.env.bcc.2)
+
+dbRDA.CC <- dbrda((df.env.bcc.CC[,-c(1:13)]) ~ df.env.bcc.CC$copies, distance = "bray")
+dbRDA.CC <- dbrda((df.env.bcc.CC[,-c(1:13)]) ~ df.env.bcc.CC$copies, distance = "bray")
+anova(dbRDA.CC)
+RsquareAdj(dbRDA.CC)
+```
+
 # Microbial Ordinations
 
 ## Principal Coordinates Ordination
@@ -344,7 +436,6 @@ theme(axis.title=element_text(size=18), axis.text=element_text(size=14), axis.te
   guides(colour = guide_legend(override.aes = list(pch=21, size = 4, colour="black",    
   fill=c("#FFFFCC", "#FFFF00", "#FF9933", "#66CC00", "#339900", "#336633", "#00CCFF")))) 
 
-ggsave("../figures/16SrRNA_BCC_Rplot.pdf", plot=last_plot(), device=NULL, path=NULL, scale=1, width=NA, height=NA, dpi=300, limitsize=TRUE)
 ```
 #PERMANOVA on soil factors - no S and W
 #check for correlations among soil factors
@@ -569,5 +660,4 @@ theme(axis.title=element_text(size=18), axis.text=element_text(size=14), axis.te
 ggsave("../figures/PHLD_Rplot.pdf", plot=last_plot(), device=NULL, path=NULL, scale=1, width=NA, height=NA, dpi=300, limitsize=TRUE)
 
 ```
-
 

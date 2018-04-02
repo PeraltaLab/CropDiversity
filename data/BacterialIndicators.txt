@@ -1,0 +1,27 @@
+OTU	Cluster	IndVal	Prob	Domain	Phylum	Class	Order	Family	Genus
+Otu000013	2	0.178591034	0.015	Bacteria	Proteobacteria	Betaproteobacteria	Burkholderiales	unclassified	unclassified
+Otu000015	2	0.203725259	0.003	Bacteria	Proteobacteria	Betaproteobacteria	unclassified	unclassified	unclassified
+Otu000022	2	0.185772786	0.018	Bacteria	Proteobacteria	unclassified	unclassified	unclassified	unclassified
+Otu000076	2	0.202520048	0.009	Bacteria	Proteobacteria	Deltaproteobacteria	Myxococcales	unclassified	unclassified
+Otu000002	3	0.189010791	0.016	Bacteria	Acidobacteria	Acidobacteria_Gp6	Acidobacteria_Gp6_order_incertae_sedis	Acidobacteria_Gp6_family_incertae_sedis	Gp6
+Otu000060	3	0.23498212	0.044	Bacteria	Acidobacteria	Acidobacteria_Gp4	Acidobacteria_Gp4_order_incertae_sedis	Acidobacteria_Gp4_family_incertae_sedis	Gp4
+Otu000046	5	0.240154142	0.007	Bacteria	Acidobacteria	Acidobacteria_Gp4	Acidobacteria_Gp4_order_incertae_sedis	Acidobacteria_Gp4_family_incertae_sedis	Gp4
+Otu000001	6	0.226549063	0.001	Bacteria	Proteobacteria	Alphaproteobacteria	Sphingomonadales	Sphingomonadaceae	unclassified
+Otu000021	6	0.245004051	0.026	Bacteria	Proteobacteria	Alphaproteobacteria	Rhizobiales	unclassified	unclassified
+Otu000027	6	0.234065891	0.041	Bacteria	Proteobacteria	Alphaproteobacteria	unclassified	unclassified	unclassified
+Otu000034	6	0.219181136	0.008	Bacteria	Proteobacteria	Betaproteobacteria	unclassified	unclassified	unclassified
+Otu000038	6	0.197479763	0.047	Bacteria	Proteobacteria	Betaproteobacteria	Burkholderiales	Oxalobacteraceae	unclassified
+Otu000051	6	0.19385767	0.041	Bacteria	Proteobacteria	Betaproteobacteria	unclassified	unclassified	unclassified
+Otu000061	6	0.264543897	0.023	Bacteria	Proteobacteria	Alphaproteobacteria	Sphingomonadales	Sphingomonadaceae	unclassified
+Otu000072	6	0.247886919	0.009	Bacteria	Proteobacteria	Alphaproteobacteria	unclassified	unclassified	unclassified
+									
+									
+"[1] ""C""        ""C-1cov""   ""CS""       ""CSW""      ""CSW-1cov"" ""CSW-2cov"" ""fallow""  "									
+									
+1	mC								
+2	C1cov								
+3	CS								
+4	CSW								
+5	CSW1cov								
+6	CSW2cov								
+7	fallow								
