@@ -27,6 +27,6 @@ suppressive capacity of soil microbiomes. Ecosphere 9(5):e02235. 10.1002/ecs2.22
 
 ## Contributors
 
-[Dr. Ariane Peralta]( ): Principle Investigator, Assistant Professor, Department of Biology, East Carolina University. Principal Investigator of the [Peralta Lab](http://www.peraltalab.com)
+[Dr. Ariane Peralta]( ): Principal Investigator, Assistant Professor, Department of Biology, East Carolina University. Principal Investigator of the [Peralta Lab](http://www.peraltalab.com)
 
 [Mario Muscarella](http://mmuscarella.github.io/): Postdoc in the [O'Dwyer Lab](https://publish.illinois.edu/odwyerlab/) at the University of Illinois at Urbana-Champaign
