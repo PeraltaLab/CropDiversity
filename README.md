@@ -6,6 +6,8 @@ For information regarding the project, please visit:
 Peralta, A. L., Y. Sun, M. D. McDaniel, and J. T. Lennon. 2018. Crop rotational diversity increases disease
 suppressive capacity of soil microbiomes. Ecosphere 9(5):e02235. 10.1002/ecs2.2235
 
+Raw sequences can be found at NCBI SRA BioProject ID PRJNA472091.
+
 ## We address the following questions
 
 * **Aim 1.)**: What is the relationship between crop diversity and soil microbial community composition and PPS potential?
