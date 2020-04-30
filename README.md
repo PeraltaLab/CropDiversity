@@ -6,7 +6,7 @@ For information regarding the project, please visit:
 Peralta, A. L., Y. Sun, M. D. McDaniel, and J. T. Lennon. 2018. Crop rotational diversity increases disease
 suppressive capacity of soil microbiomes. Ecosphere 9(5):e02235. 10.1002/ecs2.2235
 
-Raw sequence files can be found at NCBI SRA BioProject ID PRJNA472091.
+Raw sequence files can be found at NCBI SRA [BioProject ID PRJNA472091](https://www.ncbi.nlm.nih.gov/bioproject/?term=PRJNA472091).
 
 ## We address the following questions
 
@@ -31,4 +31,4 @@ Raw sequence files can be found at NCBI SRA BioProject ID PRJNA472091.
 
 [Dr. Ariane Peralta]( ): Principal Investigator, Assistant Professor, Department of Biology, East Carolina University. Principal Investigator of the [Peralta Lab](http://www.peraltalab.com)
 
-[Mario Muscarella](http://mmuscarella.github.io/): Postdoc in the [O'Dwyer Lab](https://publish.illinois.edu/odwyerlab/) at the University of Illinois at Urbana-Champaign
+[Dr. Mario Muscarella](http://mmuscarella.github.io/): Postdoc in the [O'Dwyer Lab](https://publish.illinois.edu/odwyerlab/) at the University of Illinois at Urbana-Champaign
